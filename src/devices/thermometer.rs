@@ -29,3 +29,24 @@ impl Device for Thermometer {
         format!("{} temperature is {}", self.name, self.temperature)
     }
 }
+
+#[cfg(test)]
+mod test_thermometer {
+    use super::*;
+
+    #[test]
+    fn test_get_name() {
+        let expected_name = "my_thermometer";
+        let thermometer = Thermometer::new("my_thermometer", "Kitchen", false, 0.0);
+
+        assert_eq!(thermometer.get_name(), expected_name);
+    }
+
+    #[test]
+    fn test_get_info() {
+        let expected_device_info = "my_thermometer temperature is 26";
+        let thermo = Thermometer::new("my_thermometer", "Kitchen", true, 26.0);
+
+        assert_eq!(thermo.get_info(), expected_device_info);
+    }
+}

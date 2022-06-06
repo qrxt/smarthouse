@@ -37,3 +37,24 @@ impl Device for Socket {
         )
     }
 }
+
+#[cfg(test)]
+mod test_socket {
+    use super::*;
+
+    #[test]
+    fn test_get_name() {
+        let expected_name = "my_socket";
+        let socket = Socket::new(expected_name, "Living room", false, 0.0);
+
+        assert_eq!(socket.get_name(), expected_name);
+    }
+
+    #[test]
+    fn test_get_info() {
+        let expected_device_info = "my_socket is Off. Power consumption is 0";
+        let socket = Socket::new("my_socket", "Living room", false, 0.0);
+
+        assert_eq!(socket.get_info(), expected_device_info);
+    }
+}
