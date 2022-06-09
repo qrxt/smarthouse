@@ -63,8 +63,8 @@ mod test_house {
 
         let expected_rooms = vec![room_1.clone(), room_2.clone()];
         let mut house = House::new("My house");
-        house.add_room(room_1.clone());
-        house.add_room(room_2.clone());
+        house.add_room(room_1);
+        house.add_room(room_2);
 
         assert_eq!(house.get_rooms().len(), expected_rooms.len());
         assert_eq!(house.get_rooms()[0], expected_rooms[0]);
