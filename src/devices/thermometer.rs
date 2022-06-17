@@ -1,4 +1,4 @@
-use super::device::Device;
+use super::device::{Device, DeviceConnectionError};
 
 #[derive(Debug, PartialEq)]
 pub struct Thermometer {
@@ -25,8 +25,10 @@ impl Device for Thermometer {
         self.name.to_string()
     }
 
-    fn get_info(&self) -> String {
-        format!("{} temperature is {}", self.name, self.temperature)
+    fn get_info(&self) -> Result<String, DeviceConnectionError> {
+        let res = format!("{} temperature is {}", self.name, self.temperature);
+
+        Ok(res)
     }
 }
 
@@ -47,6 +49,6 @@ mod test_thermometer {
         let expected_device_info = "my_thermometer temperature is 26";
         let thermo = Thermometer::new("my_thermometer", "Kitchen", true, 26.0);
 
-        assert_eq!(thermo.get_info(), expected_device_info);
+        assert_eq!(thermo.get_info().unwrap(), expected_device_info);
     }
 }

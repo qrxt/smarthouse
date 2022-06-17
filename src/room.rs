@@ -4,6 +4,11 @@ pub struct Room {
     pub device_names: Vec<String>,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum RoomError {
+    TryingToAddAnExistingDevice,
+}
+
 impl Room {
     pub fn get_name(&self) -> String {
         self.name.to_string()
@@ -13,6 +18,19 @@ impl Room {
         Self {
             name: name.to_string(),
             device_names,
+        }
+    }
+
+    pub fn add_device(&mut self, device: String) -> Result<(), RoomError> {
+        let has_the_same_room = self.device_names.contains(&device);
+
+        match has_the_same_room {
+            true => Err(RoomError::TryingToAddAnExistingDevice),
+            false => {
+                self.device_names.push(device);
+
+                Ok(())
+            }
         }
     }
 }

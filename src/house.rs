@@ -6,6 +6,11 @@ pub struct House {
     rooms: Vec<Room>,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum HouseError {
+    TryingToAddAnExistingRoom,
+}
+
 impl House {
     pub fn new(name: &str) -> Self {
         Self {
@@ -18,8 +23,17 @@ impl House {
         &self.rooms
     }
 
-    pub fn add_room(&mut self, room: Room) {
-        self.rooms.push(room)
+    pub fn add_room(&mut self, room: Room) -> Result<(), HouseError> {
+        let has_the_same_room = self.rooms.contains(&room);
+
+        match has_the_same_room {
+            true => Err(HouseError::TryingToAddAnExistingRoom),
+            false => {
+                self.rooms.push(room);
+
+                Ok(())
+            }
+        }
     }
 
     pub fn devices(&self, room_name: &str) -> &Vec<String> {
@@ -54,6 +68,10 @@ impl House {
 
 #[cfg(test)]
 mod test_house {
+    // use crate::utils::are_vecs_equal::are_vecs_equal;
+
+    use crate::utils::are_vecs_equal;
+
     use super::*;
 
     #[test]
@@ -63,12 +81,11 @@ mod test_house {
 
         let expected_rooms = vec![room_1.clone(), room_2.clone()];
         let mut house = House::new("My house");
-        house.add_room(room_1);
-        house.add_room(room_2);
+        let _r1 = house.add_room(room_1);
+        let _r2 = house.add_room(room_2);
 
         assert_eq!(house.get_rooms().len(), expected_rooms.len());
-        assert_eq!(house.get_rooms()[0], expected_rooms[0]);
-        assert_eq!(house.get_rooms()[1], expected_rooms[1]);
+        assert!(are_vecs_equal(house.get_rooms(), &expected_rooms));
     }
 
     #[test]
@@ -78,10 +95,13 @@ mod test_house {
         assert_eq!(house.get_rooms().len(), 0);
         let room_1 = Room::new("Kitchen", Vec::new());
 
-        house.add_room(room_1.clone());
+        let _r1 = house.add_room(room_1.clone());
 
-        assert_eq!(house.get_rooms().len(), 1);
-        assert_eq!(house.get_rooms()[0], room_1);
+        assert_eq!(_r1, Ok(()));
+
+        let expected_rooms = vec![room_1];
+
+        assert!(are_vecs_equal(house.get_rooms(), &expected_rooms))
     }
 
     #[test]
@@ -89,7 +109,7 @@ mod test_house {
         let mut house = House::new("My house");
         let room = Room::new("Kitchen", vec!["socket".to_string()]);
 
-        house.add_room(room.clone());
+        let _r1 = house.add_room(room.clone());
 
         let expected_devices = vec!["socket".to_string()];
 
@@ -97,6 +117,10 @@ mod test_house {
             house.devices(&room.get_name()).len(),
             expected_devices.len()
         );
-        assert_eq!(house.devices(&room.get_name())[0], expected_devices[0]);
+
+        assert!(are_vecs_equal(
+            house.devices(&room.get_name()),
+            &expected_devices
+        ));
     }
 }
