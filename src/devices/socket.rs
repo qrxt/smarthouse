@@ -1,4 +1,4 @@
-use super::device::Device;
+use super::device::{Device, DeviceConnectionError};
 
 #[derive(Debug, PartialEq)]
 pub struct Socket {
@@ -18,6 +18,14 @@ impl Socket {
             power_consumption,
         }
     }
+
+    pub fn turn_on() -> Result<(), DeviceConnectionError> {
+        Ok(())
+    }
+
+    pub fn turn_off() -> Result<(), DeviceConnectionError> {
+        Ok(())
+    }
 }
 
 impl Device for Socket {
@@ -25,16 +33,18 @@ impl Device for Socket {
         self.name.to_string()
     }
 
-    fn get_info(&self) -> String {
+    fn get_info(&self) -> Result<String, DeviceConnectionError> {
         let text_status = match &self.status {
             true => "On",
             false => "Off",
         };
 
-        format!(
+        let res = format!(
             "{} is {}. Power consumption is {}",
             self.name, text_status, self.power_consumption
-        )
+        );
+
+        Ok(res)
     }
 }
 
@@ -55,6 +65,6 @@ mod test_socket {
         let expected_device_info = "my_socket is Off. Power consumption is 0";
         let socket = Socket::new("my_socket", "Living room", false, 0.0);
 
-        assert_eq!(socket.get_info(), expected_device_info);
+        assert_eq!(socket.get_info().unwrap(), expected_device_info);
     }
 }

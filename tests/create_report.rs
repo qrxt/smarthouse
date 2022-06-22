@@ -17,7 +17,7 @@ impl DeviceInfoProvider for OwningDeviceInfoProvider {
         let is_fitting_device = self.socket.parent_room == room_name && device_name == socket_name;
 
         match device_name {
-            _device_name if is_fitting_device => self.socket.get_info(),
+            _device_name if is_fitting_device => self.socket.get_info().unwrap(),
             _ => "N/S".to_string(),
         }
     }
@@ -32,7 +32,7 @@ fn test_create_report() {
         device_names: vec!["my socket".to_string(), "non-existent device".to_string()],
     };
 
-    house.add_room(room);
+    let _r1 = house.add_room(room);
 
     let socket1 = Socket::new("my socket", "Living room", false, 2.0);
 

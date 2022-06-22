@@ -23,8 +23,8 @@ impl<'a, 'b> DeviceInfoProvider for BorrowingDeviceInfoProvider<'a, 'b> {
         let is_thermo = self.thermo.name == device_name;
 
         match (is_socket, is_thermo) {
-            (true, _) => self.socket.get_info(),
-            (false, true) => self.thermo.get_info(),
+            (true, _) => self.socket.get_info().unwrap(),
+            (false, true) => self.thermo.get_info().unwrap(),
             _ => "N/S".to_string(),
         }
     }
@@ -47,8 +47,8 @@ fn main() {
         device_names: vec!["door sensor".to_string()],
     };
 
-    house.add_room(room1);
-    house.add_room(room2);
+    let _r1 = house.add_room(room1);
+    let _r2 = house.add_room(room2);
 
     let socket2 = Socket::new("my socket", "Kitchen", true, 4.0);
     let thermo = Thermometer::new("thermometer", "Kitchen", true, 24.0);

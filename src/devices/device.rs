@@ -12,7 +12,7 @@ pub trait DeviceInfoProvider {
 
 pub trait Device {
     fn get_name(&self) -> String;
-    fn get_info(&self) -> String;
+    fn get_info(&self) -> Result<String, DeviceConnectionError>;
 }
 
 impl Device for DeviceItem {
@@ -23,10 +23,16 @@ impl Device for DeviceItem {
         }
     }
 
-    fn get_info(&self) -> String {
+    fn get_info(&self) -> Result<String, DeviceConnectionError> {
         match self {
             DeviceItem::Socket(socket) => socket.get_info(),
             DeviceItem::Thermometer(thermometer) => thermometer.get_info(),
         }
     }
+}
+
+#[derive(Debug)]
+pub enum DeviceConnectionError {
+    NotFoundError,
+    TimedOutError,
 }
