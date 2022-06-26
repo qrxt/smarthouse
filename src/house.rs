@@ -23,10 +23,12 @@ impl House {
         &self.rooms
     }
 
-    pub fn add_room(&mut self, room: Room) -> Result<(), HouseError> {
-        let has_the_same_room = self.rooms.contains(&room);
+    pub fn is_room_exist(&self, room_name: &str) -> bool {
+        self.rooms.iter().any(|r| r.get_name() == room_name)
+    }
 
-        match has_the_same_room {
+    pub fn add_room(&mut self, room: Room) -> Result<(), HouseError> {
+        match Self::is_room_exist(self, &room.name) {
             true => Err(HouseError::TryingToAddAnExistingRoom),
             false => {
                 self.rooms.push(room);
@@ -34,6 +36,20 @@ impl House {
                 Ok(())
             }
         }
+    }
+
+    pub fn add_rooms(&mut self, rooms: Vec<Room>) -> Result<(), HouseError> {
+        rooms.into_iter().try_for_each(|r| Self::add_room(self, r))
+    }
+
+    pub fn remove_room(&mut self, room_name: &str) {
+        let idx = self
+            .get_rooms()
+            .iter()
+            .position(|r| r.get_name() == room_name)
+            .unwrap();
+
+        self.rooms.remove(idx);
     }
 
     pub fn devices(&self, room_name: &str) -> &Vec<String> {
@@ -68,8 +84,6 @@ impl House {
 
 #[cfg(test)]
 mod test_house {
-    // use crate::utils::are_vecs_equal::are_vecs_equal;
-
     use crate::utils::are_vecs_equal;
 
     use super::*;
@@ -89,19 +103,44 @@ mod test_house {
     }
 
     #[test]
-    fn test_add_room() {
+    fn test_add_room_success() {
         let mut house = House::new("My house");
 
         assert_eq!(house.get_rooms().len(), 0);
         let room_1 = Room::new("Kitchen", Vec::new());
 
-        let _r1 = house.add_room(room_1.clone());
+        let result = house.add_room(room_1.clone());
 
-        assert_eq!(_r1, Ok(()));
+        assert_eq!(result, Ok(()));
 
         let expected_rooms = vec![room_1];
 
         assert!(are_vecs_equal(house.get_rooms(), &expected_rooms))
+    }
+
+    #[test]
+    fn test_add_room_error() {
+        let mut house = House::new("My house");
+
+        let _r1 = house.add_room(Room::new("Kitchen", Vec::new()));
+        let result = house.add_room(Room::new("Kitchen", Vec::new()));
+
+        assert_eq!(result, Err(HouseError::TryingToAddAnExistingRoom));
+    }
+
+    #[test]
+    fn test_remove_room() {
+        let mut house = House::new("My house");
+
+        let room_1 = Room::new("Kitchen", Vec::new());
+
+        let _r = house.add_room(room_1);
+
+        assert_eq!(house.get_rooms().len(), 1);
+
+        house.remove_room("Kitchen");
+
+        assert_eq!(house.get_rooms().len(), 0);
     }
 
     #[test]
