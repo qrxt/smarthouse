@@ -1,6 +1,4 @@
 make all --print-data-base --no-builtin-variables --no-builtin-rules --question
-make: *** No rule to make target 'all'.  Stop.
-
 # GNU Make 4.2.1
 # Built for x86_64-pc-linux-gnu
 # Copyright (C) 1988-2016 Free Software Foundation, Inc.
@@ -8,7 +6,7 @@ make: *** No rule to make target 'all'.  Stop.
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Thu Jun 30 00:49:40 2022
+# Make data base, printed on Fri Jul  1 17:49:36 2022
 
 # Variables
 
@@ -61,7 +59,7 @@ NVM_BIN = /home/qrx/.nvm/versions/node/v16.13.2/bin
 # environment
 VSCODE_LOG_STACK = false
 # environment
-VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-e67789cd-4808-4717-a171-72eadb370d72.sock
+VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-e20c66dc-9c1c-4876-8b04-aba3cd70cf5e.sock
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
 # environment
@@ -199,7 +197,7 @@ all:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-06-26 20:14:11.064471841
+#  Last modified 2022-07-01 03:26:51.803013528
 #  File has been updated.
 #  Successfully updated.
 
@@ -211,6 +209,13 @@ test:
 	cargo fmt --check
 	cargo clippy
 	cargo test
+
+run_client:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 15):
+	cargo run --example client  
 
 watch:
 #  Implicit rule search has not been done.
@@ -225,28 +230,29 @@ watch:
 #  Modification time never checked.
 #  File has not been updated.
 
-homework-examples:
+run_server:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 10):
-	cargo run --example rooms
-	cargo run --example devices
+#  recipe to execute (from 'Makefile', line 12):
+	cargo run --example server  
 
 # files hash-table stats:
-# Load=7/1024=1%, Rehash=0, Collisions=0/17=0%
+# Load=8/1024=1%, Rehash=0, Collisions=0/18=0%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 20 / storage = 179 B / avg = 8 B
-# current buf: size = 8162 B / used = 179 B / count = 20 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 21 / storage = 183 B / avg = 8 B
+# current buf: size = 8162 B / used = 183 B / count = 21 / avg = 8 B
 
-# strcache performance: lookups = 27 / hit rate = 25%
+# strcache performance: lookups = 29 / hit rate = 27%
 # hash-table stats:
-# Load=20/8192=0%, Rehash=0, Collisions=1/27=4%
-# Finished Make data base on Thu Jun 30 00:49:40 2022
+# Load=21/8192=0%, Rehash=0, Collisions=1/29=3%
+# Finished Make data base on Fri Jul  1 17:49:36 2022
 
  
+make: *** No rule to make target 'all'.  Stop.
+

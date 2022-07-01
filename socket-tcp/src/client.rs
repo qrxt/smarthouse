@@ -40,7 +40,7 @@ impl Client {
                     _ => Err(ConnectionError::CantConnect),
                 }
             }
-            _ => panic!(),
+            Err(_) => Err(ConnectionError::CantConnect),
         }
     }
 

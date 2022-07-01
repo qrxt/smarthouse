@@ -20,8 +20,6 @@ pub fn run_server(address: &str) {
         match stream {
             Ok(stream) => {
                 println!("New connection: {}", stream.peer_addr().unwrap());
-                // thread::spawn(move || handle_connection(stream, &socket));
-
                 handle_connection(stream, &mut socket);
             }
             Err(e) => {
