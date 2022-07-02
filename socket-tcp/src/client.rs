@@ -32,11 +32,12 @@ impl Client {
 
                 let mut data = [0; 64];
                 match stream.read(&mut data) {
-                    Ok(size) => Ok(from_utf8(&data)
-                        .unwrap()
-                        .chars()
-                        .take(size)
-                        .collect::<String>()),
+                    Ok(size) => {
+                        let subslice = data.get(0..size).unwrap();
+                        let result = from_utf8(subslice).unwrap().to_owned();
+
+                        Ok(result)
+                    }
                     _ => Err(ConnectionError::CantConnect),
                 }
             }
