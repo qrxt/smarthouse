@@ -6,15 +6,19 @@ use std::{
 
 use crate::{command::Command, socket::Socket};
 
-pub fn run_server(address: &str) {
+pub fn run_server<Cb>(address: &str, cb_after_start: Cb)
+where
+    Cb: Fn(),
+{
     let listener = TcpListener::bind(address).unwrap();
-    println!("Server is listening on {}", address);
 
     let mut socket = Socket {
         name: "my socket".to_string(),
         power_consumption: 20.0,
         status: false,
     };
+
+    cb_after_start();
 
     for stream in listener.incoming() {
         match stream {
