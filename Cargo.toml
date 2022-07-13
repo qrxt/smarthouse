@@ -3,4 +3,6 @@
 members = [
     "smart_house",
     "socket-tcp",
+    "thermometer-udp"
 ]
+default-members = ["thermometer-udp"]

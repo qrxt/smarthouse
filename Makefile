@@ -8,8 +8,5 @@ watch:
 
 #
 
-run_server:
-	cargo run --example server  
-
-run_client:
-	cargo run --example client  
+start:
+	cargo run --example client
