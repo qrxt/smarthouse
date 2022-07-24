@@ -1,4 +1,5 @@
-use std::{net::UdpSocket, sync::Arc, thread};
+use std::sync::Arc;
+use tokio::net::UdpSocket;
 
 use crate::temp::Temp;
 
@@ -10,17 +11,22 @@ pub struct Thermometer {
 }
 
 impl Thermometer {
-    pub fn new(name: String, address: String) -> Thermometer {
+    pub async fn new(name: String, address: String) -> Thermometer {
         let temperature = Arc::new(Temp::default());
-        let socket = UdpSocket::bind(&address).expect("Couldn't bind address");
+        let socket = UdpSocket::bind(&address)
+            .await
+            .expect("Couldn't bind address");
 
         let temp_cloned = temperature.clone();
 
-        thread::spawn(move || -> std::io::Result<()> {
+        tokio::spawn(async move {
             loop {
                 let mut buf: [u8; 4] = [0; 4];
 
-                socket.recv_from(&mut buf)?;
+                socket
+                    .recv_from(&mut buf)
+                    .await
+                    .expect("Unable to receive data");
                 let temp = f32::from_be_bytes(buf);
 
                 temp_cloned.set_temp(temp);
