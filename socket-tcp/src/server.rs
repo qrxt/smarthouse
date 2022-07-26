@@ -26,9 +26,9 @@ where
         println!("$$$inside loop");
 
         let smart_socket = smart_socket.clone();
-        // tokio::spawn(async move {
-        handle_connection(stream, smart_socket).await;
-        // });
+        tokio::spawn(async move {
+            handle_connection(stream, smart_socket).await;
+        });
     }
 }
 
