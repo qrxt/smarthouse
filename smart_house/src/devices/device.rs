@@ -1,4 +1,14 @@
+use thiserror::Error;
+
 use super::{socket::Socket, thermometer::Thermometer};
+
+#[derive(Debug, Error)]
+pub enum DeviceConnectionError {
+    #[error("Cannot find device with name {:?}", .0)]
+    NotFoundError(String),
+    #[error("Connection timed out")]
+    TimedOutError,
+}
 
 #[derive(Debug, PartialEq)]
 pub enum DeviceItem {
@@ -29,10 +39,4 @@ impl Device for DeviceItem {
             DeviceItem::Thermometer(thermometer) => thermometer.get_info(),
         }
     }
-}
-
-#[derive(Debug)]
-pub enum DeviceConnectionError {
-    NotFoundError,
-    TimedOutError,
 }

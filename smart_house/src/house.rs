@@ -1,3 +1,5 @@
+use thiserror::Error;
+
 use crate::{devices::device::DeviceInfoProvider, room::Room};
 
 #[derive(Debug)]
@@ -6,9 +8,12 @@ pub struct House {
     rooms: Vec<Room>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Error)]
 pub enum HouseError {
-    TryingToAddAnExistingRoom,
+    #[error("Room with name {:?} already exists", .0)]
+    TryingToAddAnExistingRoom(String),
+    #[error("Device with name {:?} already exists", .0)]
+    TryingToAddAnExistingDevice(String),
 }
 
 impl House {
@@ -28,13 +33,12 @@ impl House {
     }
 
     pub fn add_room(&mut self, room: Room) -> Result<(), HouseError> {
-        match Self::is_room_exist(self, &room.name) {
-            true => Err(HouseError::TryingToAddAnExistingRoom),
-            false => {
-                self.rooms.push(room);
+        if Self::is_room_exist(self, &room.name) {
+            Err(HouseError::TryingToAddAnExistingRoom(room.name))
+        } else {
+            self.rooms.push(room);
 
-                Ok(())
-            }
+            Ok(())
         }
     }
 
@@ -119,13 +123,23 @@ mod test_house {
     }
 
     #[test]
-    fn test_add_room_error() {
+    fn test_add_room_error() -> Result<(), HouseError> {
         let mut house = House::new("My house");
 
-        let _r1 = house.add_room(Room::new("Kitchen", Vec::new()));
+        house.add_room(Room::new("Kitchen", Vec::new()))?;
         let result = house.add_room(Room::new("Kitchen", Vec::new()));
 
-        assert_eq!(result, Err(HouseError::TryingToAddAnExistingRoom));
+        assert_eq!(
+            result,
+            Err(HouseError::TryingToAddAnExistingRoom("Kitchen".to_string()))
+        );
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Room with name \"Kitchen\" already exists",
+        );
+
+        Ok(())
     }
 
     #[test]
