@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Socket {
     pub name: String,
     pub status: bool,

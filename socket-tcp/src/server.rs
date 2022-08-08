@@ -1,57 +1,74 @@
-use std::{
-    io::{BufRead, BufReader, Write},
-    net::{TcpListener, TcpStream},
-    str::FromStr,
-};
+use std::str::FromStr;
+use std::sync::{Arc, Mutex};
+
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::net::{TcpListener, TcpStream};
 
 use crate::{command::Command, socket::Socket};
 
-pub fn run_server<Cb>(address: &str, cb_after_start: Cb)
+pub async fn run_server<Cb>(address: &str, cb_after_start: Cb) -> std::io::Result<()>
 where
     Cb: Fn(),
 {
-    let listener = TcpListener::bind(address).unwrap();
+    let listener = TcpListener::bind(address).await?;
 
-    let mut socket = Socket {
+    let socket_default = Socket {
         name: "my socket".to_string(),
         power_consumption: 20.0,
         status: false,
     };
+    let smart_socket = Arc::new(Mutex::new(socket_default));
 
     cb_after_start();
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                println!("New connection: {}", stream.peer_addr().unwrap());
-                handle_connection(stream, &mut socket);
-            }
-            Err(e) => {
-                println!("Error: {}", e);
-            }
-        }
+    loop {
+        let (stream, _) = listener.accept().await.expect("Can't accept");
+        println!("$$$inside loop");
+
+        let smart_socket = smart_socket.clone();
+        tokio::spawn(async move {
+            handle_connection(stream, smart_socket).await;
+        });
     }
 }
 
-fn handle_connection(mut stream: TcpStream, socket: &mut Socket) {
+async fn handle_connection(mut stream: TcpStream, socket: Arc<Mutex<Socket>>) {
     let mut response = String::new();
-    let mut buf_reader = BufReader::new(&stream);
+    let mut buf_reader = BufReader::new(&mut stream);
 
-    buf_reader.read_line(&mut response).expect("unable to read");
+    println!("from handle conn");
+
+    buf_reader
+        .read_line(&mut response)
+        .await
+        .expect("Unable to read");
+
     let command = Command::from_str(response.trim()).unwrap();
 
     let message_for_client = match command {
-        Command::GetStatus => socket.get_status(),
+        Command::GetStatus => {
+            let socket = socket.lock().unwrap();
+            socket.get_status()
+        }
         Command::TurnOn => {
+            let mut socket = socket.lock().unwrap();
+
             socket.turn_on();
             socket.get_status()
         }
         Command::TurnOff => {
+            let mut socket = socket.lock().unwrap();
             socket.turn_off();
             socket.get_status()
         }
-        Command::GetPowerConsumption => socket.get_power_consumption(),
+        Command::GetPowerConsumption => {
+            let socket = socket.lock().unwrap();
+            socket.get_power_consumption()
+        }
     };
 
-    stream.write_all(message_for_client.as_bytes()).unwrap();
+    stream
+        .write_all(message_for_client.as_bytes())
+        .await
+        .unwrap();
 }
