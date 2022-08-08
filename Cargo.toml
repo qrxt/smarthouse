@@ -5,3 +5,5 @@ members = [
     "socket-tcp",
     "thermometer-udp"
 ]
+
+default-members = ["thermometer-udp"]
