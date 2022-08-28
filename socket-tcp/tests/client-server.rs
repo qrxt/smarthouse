@@ -4,7 +4,7 @@ use socket_tcp::{
 };
 
 #[tokio::test]
-async fn main() -> Result<(), ConnectionError> {
+async fn test_client_server() -> Result<(), ConnectionError> {
     let address = "127.0.0.1:3333".to_string();
 
     let socket_client = Client {
@@ -32,6 +32,22 @@ async fn main() -> Result<(), ConnectionError> {
 
     let handle = tokio::spawn(async move { run_tests(socket_client).await });
     handle.await.unwrap()?;
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_cant_connect_error() -> Result<(), ConnectionError> {
+    let socket_client = Client {
+        address: "127.0.0.1:3333".to_string(),
+    };
+
+    let result = socket_client.turn_on().await.unwrap_err().to_string();
+
+    assert_eq!(
+        result,
+        "Failed to connect to server: \"Connection refused (os error 111)\""
+    );
 
     Ok(())
 }

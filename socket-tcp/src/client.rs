@@ -1,5 +1,6 @@
 use std::str::from_utf8;
 
+use thiserror::Error;
 use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
@@ -10,9 +11,11 @@ pub struct Client {
     pub address: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ConnectionError {
-    CantConnect,
+    #[error("Failed to connect to server: {:?}", .0)]
+    CantConnect(String),
+    #[error("Failed to read from connection")]
     CantRead,
 }
 
@@ -42,11 +45,7 @@ impl Client {
                     _ => Err(ConnectionError::CantRead),
                 }
             }
-            Err(e) => {
-                println!("$$${}", e);
-
-                Err(ConnectionError::CantConnect)
-            }
+            Err(e) => Err(ConnectionError::CantConnect(e.to_string())),
         }
     }
 

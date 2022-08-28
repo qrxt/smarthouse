@@ -1,12 +1,9 @@
+use crate::house::HouseError;
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Room {
     pub name: String,
     pub device_names: Vec<String>,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum RoomError {
-    TryingToAddAnExistingDevice,
 }
 
 impl Room {
@@ -25,18 +22,17 @@ impl Room {
         self.device_names.iter().any(|d| d == device_name)
     }
 
-    pub fn add_device(&mut self, device: String) -> Result<(), RoomError> {
-        match Self::is_device_exist(self, &device) {
-            true => Err(RoomError::TryingToAddAnExistingDevice),
-            false => {
-                self.device_names.push(device);
+    pub fn add_device(&mut self, device: String) -> Result<(), HouseError> {
+        if Self::is_device_exist(self, &device) {
+            Err(HouseError::TryingToAddAnExistingDevice(device))
+        } else {
+            self.device_names.push(device);
 
-                Ok(())
-            }
+            Ok(())
         }
     }
 
-    pub fn add_devices(&mut self, devices: Vec<String>) -> Result<(), RoomError> {
+    pub fn add_devices(&mut self, devices: Vec<String>) -> Result<(), HouseError> {
         devices
             .into_iter()
             .try_for_each(|d| Self::add_device(self, d))
@@ -79,11 +75,22 @@ mod test_house {
     #[test]
     fn test_add_device_error() {
         let mut room = Room::new("My room", Vec::new());
+        let device_name = "tv".to_string();
 
-        let _r = room.add_device("tv".to_string());
-        let result = room.add_device("tv".to_string());
+        let _r = room.add_device(device_name.to_owned());
+        let result = room.add_device(device_name.to_owned());
 
-        assert_eq!(result, Err(RoomError::TryingToAddAnExistingDevice));
+        assert_eq!(
+            result,
+            Err(HouseError::TryingToAddAnExistingDevice(
+                device_name.to_owned()
+            ))
+        );
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            format!("Device with name \"{}\" already exists", device_name)
+        )
     }
 
     #[test]
@@ -102,11 +109,25 @@ mod test_house {
     #[test]
     fn test_add_multiple_devices_error() {
         let mut room = Room::new("My room", Vec::new());
+        let device_name = "tv";
 
-        let _r = room.add_device("tv".to_string());
-        let result = room.add_devices(vec!["tv".to_string(), "thermo".to_string()]);
+        let _r = room.add_device(device_name.to_owned());
+        let result = room.add_devices(vec![device_name.to_owned(), "thermo".to_string()]);
 
-        assert_eq!(result, Err(RoomError::TryingToAddAnExistingDevice));
+        assert_eq!(
+            result,
+            Err(HouseError::TryingToAddAnExistingDevice(
+                device_name.to_owned()
+            ))
+        );
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            format!(
+                "Device with name \"{}\" already exists",
+                device_name.to_owned()
+            )
+        )
     }
 
     #[test]

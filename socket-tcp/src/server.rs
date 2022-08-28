@@ -22,8 +22,7 @@ where
     cb_after_start();
 
     loop {
-        let (stream, _) = listener.accept().await.expect("Can't accept");
-        println!("$$$inside loop");
+        let (stream, _) = listener.accept().await?;
 
         let smart_socket = smart_socket.clone();
         tokio::spawn(async move {
