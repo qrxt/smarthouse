@@ -3,5 +3,6 @@
 members = [
     "smart_house",
     "socket-tcp",
-    "thermometer-udp"
+    "thermometer-udp",
+    "smart-house-http",
 ]

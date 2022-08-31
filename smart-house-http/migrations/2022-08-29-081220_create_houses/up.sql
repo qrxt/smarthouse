@@ -1,0 +1,4 @@
+CREATE TABLE houses (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR NOT NULL
+);

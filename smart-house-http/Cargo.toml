@@ -1,0 +1,19 @@
+[package]
+name = "smart-house-http"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rocket = "0.4.11"
+rocket_contrib = "0.4.11"
+serde = { version = "1.0.144", features = ["derive"] }
+diesel = { version = "1.4.8", features = ["postgres", "r2d2"] }
+dotenv = "0.15.0"
+postgres = "0.19.4"
+mockall = "0.11.2"
+thiserror = "1.0.32"
+
+[dependencies.smart_house]
+path = "../smart_house"
