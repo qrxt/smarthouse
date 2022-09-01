@@ -6,3 +6,4 @@ members = [
     "thermometer-udp",
     "smart-house-http",
 ]
+default-members = ["smart-house-http"]

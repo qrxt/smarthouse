@@ -1,13 +1,12 @@
 use crate::db_pool;
 use crate::diesel::RunQueryDsl;
 use crate::room::Room;
-use crate::schema;
-use crate::schema::{house_rooms, houses, rooms};
+use crate::schema::{house_rooms, houses};
 use diesel::associations::HasTable;
 use diesel::result::Error::NotFound;
+use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::QueryResult;
-use diesel::{AppearsOnTable, ExpressionMethods};
 use rocket::http::Status;
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};

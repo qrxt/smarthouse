@@ -8,6 +8,7 @@ extern crate diesel;
 use std::env;
 
 pub mod db_pool;
+pub mod device;
 pub mod house;
 pub mod room;
 pub mod schema;
@@ -44,6 +45,10 @@ fn main() {
                 room::delete,
                 room::add_device
             ],
+        )
+        .mount(
+            "/devices",
+            routes![device::get, device::get_all, device::create, device::delete,],
         )
         .launch();
 }
