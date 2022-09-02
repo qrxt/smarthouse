@@ -10,14 +10,11 @@ extern crate dotenv;
 extern crate diesel;
 
 use dotenv::dotenv;
+use smart_house_http::db_pool;
+use smart_house_http::device;
+use smart_house_http::house;
+use smart_house_http::room;
 use std::env;
-
-pub mod db_pool;
-pub mod device;
-pub mod house;
-pub mod room;
-pub mod schema;
-pub mod utils;
 
 fn main() {
     dotenv().ok();
