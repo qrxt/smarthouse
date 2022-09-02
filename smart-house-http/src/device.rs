@@ -5,6 +5,7 @@ use diesel;
 use diesel::QueryDsl;
 use diesel::QueryResult;
 use diesel_derive_enum::DbEnum;
+use rocket::http::Status;
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
 
@@ -33,9 +34,32 @@ pub struct Socket {
 pub struct Device {
     pub id: i32,
     pub name: String,
-    pub parent_room: String,
+    pub parent_room: i32,
     pub type_: DeviceItem,
     pub data: String,
+}
+
+impl Device {
+    pub fn get_status(&self, room_name: String) -> String {
+        match self.type_ {
+            DeviceItem::Thermometer => {
+                let thermo: Thermometer = serde_json::from_str(&self.data).unwrap();
+
+                format!(
+                    "Thermometer ({}):\nLocation: {}\nCurrent temperature is {}",
+                    &thermo.name, room_name, &thermo.temperature
+                )
+            }
+            DeviceItem::Socket => {
+                let socket: Socket = serde_json::from_str(&self.data).unwrap();
+
+                format!(
+                    "Socket ({}):\nLocation: {}\nStatus is {}",
+                    &socket.name, room_name, &socket.status
+                )
+            }
+        }
+    }
 }
 
 #[get("/<fid>")]
@@ -67,7 +91,7 @@ enum DeviceWrapper {
 #[table_name = "devices"]
 pub struct NewDevice {
     pub name: String,
-    pub parent_room: String,
+    pub parent_room: i32,
     pub type_: DeviceItem,
     pub data: String,
 }
@@ -78,27 +102,6 @@ pub fn create(new_device: Json<NewDevice>, conn: db_pool::DbConn) -> Json<Device
 
     let new_device = new_device.0;
 
-    let device_item = match &new_device.type_ {
-        DeviceItem::Socket => {
-            let socket: Result<Socket, serde_json::Error> = serde_json::from_str(&new_device.data);
-
-            DeviceWrapper::Socket(socket.unwrap())
-        }
-        DeviceItem::Thermometer => {
-            let thermo: Result<Thermometer, serde_json::Error> =
-                serde_json::from_str(&new_device.data);
-
-            DeviceWrapper::Thermometer(thermo.unwrap())
-        }
-    };
-
-    let new_data = serde_json::to_string(&device_item).unwrap();
-
-    let new_device = NewDevice {
-        data: new_data,
-        ..new_device
-    };
-
     Json(
         diesel::insert_into(devices)
             .values(&new_device)
@@ -108,10 +111,12 @@ pub fn create(new_device: Json<NewDevice>, conn: db_pool::DbConn) -> Json<Device
 }
 
 #[delete("/<fid>")]
-pub fn delete(fid: i32, conn: db_pool::DbConn) {
+pub fn delete(fid: i32, conn: db_pool::DbConn) -> Result<(), Status> {
     use super::schema::devices::dsl::*;
 
     diesel::delete(devices.find(fid))
         .execute(&*conn)
         .expect("Failed to delete device");
+
+    Ok(())
 }

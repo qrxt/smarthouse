@@ -5,7 +5,7 @@ table! {
     devices (id) {
         id -> Int4,
         name -> Varchar,
-        parent_room -> Varchar,
+        parent_room -> Int4,
         #[sql_name = "type"]
         type_ -> Device_item,
         data -> Text,
@@ -44,6 +44,7 @@ table! {
     }
 }
 
+joinable!(devices -> rooms (parent_room));
 joinable!(house_rooms -> houses (house_id));
 joinable!(house_rooms -> rooms (room_id));
 

@@ -89,6 +89,7 @@ pub fn add_device(
     room_devices.push(device.name);
 
     diesel::update(rooms)
+        .filter(rooms::id.eq(fid))
         .set(rooms::device_names.eq(room_devices))
         .execute(&*conn)
         .expect("Failed to add new device");
@@ -97,10 +98,12 @@ pub fn add_device(
 }
 
 #[delete("/<fid>")]
-pub fn delete(fid: i32, conn: db_pool::DbConn) {
+pub fn delete(fid: i32, conn: db_pool::DbConn) -> Result<(), Status> {
     use super::schema::rooms::dsl::*;
 
     diesel::delete(rooms.find(fid))
         .execute(&*conn)
         .expect("Failed to delete room");
+
+    Ok(())
 }

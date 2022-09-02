@@ -1,4 +1,5 @@
 use crate::db_pool;
+use crate::device::Device;
 use crate::diesel::RunQueryDsl;
 use crate::room::Room;
 use crate::schema::{house_rooms, houses};
@@ -65,12 +66,14 @@ pub fn create(house: Json<House>, conn: db_pool::DbConn) -> Result<Json<House>, 
 }
 
 #[delete("/<fid>")]
-pub fn delete(fid: i32, conn: db_pool::DbConn) {
+pub fn delete(fid: i32, conn: db_pool::DbConn) -> Result<(), Status> {
     use super::schema::houses::dsl::*;
 
     diesel::delete(houses.find(fid))
         .execute(&*conn)
         .expect("Failed to delete house");
+
+    Ok(())
 }
 
 //
@@ -88,4 +91,45 @@ pub fn get_all_rooms(fid: i32, conn: db_pool::DbConn) -> QueryResult<Json<Vec<Ro
         .select(rooms::all_columns)
         .load::<Room>(&*conn)
         .map(Json)
+}
+
+//
+
+#[derive(Serialize, Deserialize)]
+pub struct HouseReport {
+    house: String,
+    report: String,
+}
+
+#[get("/<fid>/report")]
+pub fn get_report(fid: i32, conn: db_pool::DbConn) -> Result<Json<HouseReport>, Status> {
+    use super::schema::devices;
+    use super::schema::house_rooms::dsl::*;
+    use super::schema::houses;
+    use super::schema::houses::columns::id as houses_id;
+    use super::schema::rooms;
+
+    let house = houses::table
+        .find(fid)
+        .first::<House>(&*conn)
+        .expect("Failed to get house name");
+
+    let house_devices: Vec<(String, Device)> = houses::table
+        .inner_join(house_rooms::table().inner_join(rooms::table.inner_join(devices::table)))
+        .filter(houses_id.eq(fid))
+        .select((rooms::name, devices::all_columns))
+        .load::<(String, Device)>(&*conn)
+        .expect("Failed to find house devices");
+
+    let report_data: Vec<String> = house_devices
+        .into_iter()
+        .map(|(room_name, device)| device.get_status(room_name))
+        .collect();
+
+    let report = HouseReport {
+        house: house.name,
+        report: report_data.join("\n"),
+    };
+
+    Ok(Json(report))
 }

@@ -1,10 +1,15 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
 #[macro_use]
+extern crate dotenv_codegen;
+
+#[macro_use]
 extern crate rocket;
+extern crate dotenv;
 #[macro_use]
 extern crate diesel;
 
+use dotenv::dotenv;
 use std::env;
 
 pub mod db_pool;
@@ -15,7 +20,9 @@ pub mod schema;
 pub mod utils;
 
 fn main() {
-    dotenv::dotenv().ok();
+    dotenv().ok();
+    dotenv::from_filename("../.env").ok();
+
     // let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let database_url = "postgres://qrx:123@localhost/smart_house"; // TODO! remove! use from .env
 
@@ -33,7 +40,8 @@ fn main() {
                 house::get,
                 house::create,
                 house::delete,
-                house::get_all_rooms
+                house::get_all_rooms,
+                house::get_report,
             ],
         )
         .mount(
