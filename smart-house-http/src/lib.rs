@@ -5,6 +5,7 @@ extern crate dotenv;
 #[macro_use]
 extern crate diesel;
 
+pub mod client;
 pub mod db_pool;
 pub mod device;
 pub mod house;

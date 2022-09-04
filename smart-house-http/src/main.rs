@@ -1,13 +1,8 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
 #[macro_use]
-extern crate dotenv_codegen;
-
-#[macro_use]
 extern crate rocket;
 extern crate dotenv;
-#[macro_use]
-extern crate diesel;
 
 use dotenv::dotenv;
 use smart_house_http::db_pool;
@@ -39,6 +34,7 @@ fn main() {
                 house::delete,
                 house::get_all_rooms,
                 house::get_report,
+                house::link_house_with_room,
             ],
         )
         .mount(

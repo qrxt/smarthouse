@@ -4,7 +4,6 @@ use crate::diesel::RunQueryDsl;
 use crate::room::Room;
 use crate::schema::{house_rooms, houses};
 use diesel::associations::HasTable;
-use diesel::result::Error::NotFound;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::QueryResult;
@@ -46,34 +45,45 @@ pub fn get(fid: i32, conn: db_pool::DbConn) -> Json<House> {
     )
 }
 
+#[derive(Serialize, Deserialize, Queryable, Debug, Insertable, PartialEq, Eq)]
+#[table_name = "houses"]
+pub struct NewHouse {
+    pub name: String,
+}
+
 #[post("/", data = "<house>")]
-pub fn create(house: Json<House>, conn: db_pool::DbConn) -> Result<Json<House>, Status> {
+pub fn create(house: Json<NewHouse>, conn: db_pool::DbConn) -> Result<Json<House>, Status> {
+    use super::schema::houses;
     use super::schema::houses::dsl::*;
 
     let house = house.0;
-    let is_room_exist = houses.find(&house.id).first::<House>(&*conn);
 
-    match is_room_exist {
-        Err(NotFound) => Ok(Json(
+    let houses_with_same_name = houses
+        .select(houses::all_columns)
+        .filter(houses::name.eq(&house.name))
+        .load::<House>(&*conn)
+        .expect("Failed to add new house");
+
+    match houses_with_same_name[..] {
+        [] => Ok(Json(
             diesel::insert_into(houses)
                 .values(&house)
                 .get_result(&*conn)
                 .expect("Failed to add new house"),
         )),
-        Ok(_) => Err(Status::Conflict),
-        _ => panic!("Failed to add new house"),
+        _ => Err(Status::Conflict),
     }
 }
 
 #[delete("/<fid>")]
-pub fn delete(fid: i32, conn: db_pool::DbConn) -> Result<(), Status> {
+pub fn delete(fid: i32, conn: db_pool::DbConn) -> Result<Json<()>, Status> {
     use super::schema::houses::dsl::*;
 
     diesel::delete(houses.find(fid))
         .execute(&*conn)
         .expect("Failed to delete house");
 
-    Ok(())
+    Ok(Json(()))
 }
 
 //
@@ -93,12 +103,36 @@ pub fn get_all_rooms(fid: i32, conn: db_pool::DbConn) -> QueryResult<Json<Vec<Ro
         .map(Json)
 }
 
+#[derive(Serialize, Deserialize, Queryable, Debug, Insertable, PartialEq, Eq)]
+#[table_name = "house_rooms"]
+pub struct NewHouseRoom {
+    pub house_id: i32,
+    pub room_id: i32,
+}
+
+#[post("/house_rooms", data = "<house_room>")]
+pub fn link_house_with_room(
+    house_room: Json<NewHouseRoom>,
+    conn: db_pool::DbConn,
+) -> Result<Json<HouseRooms>, Status> {
+    use super::schema::house_rooms::dsl::*;
+
+    let house_room = house_room.0;
+
+    Ok(Json(
+        diesel::insert_into(house_rooms)
+            .values(&house_room)
+            .get_result(&*conn)
+            .expect("Failed to add new house room link"),
+    ))
+}
+
 //
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct HouseReport {
-    house: String,
-    report: String,
+    pub house: String,
+    pub report: String,
 }
 
 #[get("/<fid>/report")]

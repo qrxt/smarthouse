@@ -1,9 +1,9 @@
 use crate::db_pool;
-use crate::diesel::RunQueryDsl;
 use crate::schema::devices;
 use diesel;
 use diesel::QueryDsl;
 use diesel::QueryResult;
+use diesel::RunQueryDsl;
 use diesel_derive_enum::DbEnum;
 use rocket::http::Status;
 use rocket_contrib::json::Json;
@@ -19,14 +19,14 @@ pub enum DeviceItem {
 
 #[derive(Serialize, Deserialize)]
 pub struct Thermometer {
-    name: String,
-    temperature: f32,
+    pub name: String,
+    pub temperature: f32,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Socket {
-    name: String,
-    status: bool,
+    pub name: String,
+    pub status: bool,
 }
 
 #[derive(Serialize, Deserialize, Identifiable, Queryable, Debug, Insertable)]

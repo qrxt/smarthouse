@@ -1,3 +1,4 @@
+#[allow(clippy::all)]
 table! {
     use diesel::sql_types::*;
     use crate::device::Device_item;
@@ -48,9 +49,4 @@ joinable!(devices -> rooms (parent_room));
 joinable!(house_rooms -> houses (house_id));
 joinable!(house_rooms -> rooms (room_id));
 
-allow_tables_to_appear_in_same_query!(
-    devices,
-    house_rooms,
-    houses,
-    rooms,
-);
+allow_tables_to_appear_in_same_query!(devices, house_rooms, houses, rooms,);

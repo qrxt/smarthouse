@@ -1,9 +1,7 @@
-use core::panic;
-
 use crate::diesel::RunQueryDsl;
+use crate::house::{HouseRooms, NewHouseRoom};
 use crate::utils::has_duplicates::has_duplicates;
 use crate::{db_pool, schema::rooms};
-use diesel::result::Error::NotFound;
 use diesel::ExpressionMethods;
 use diesel::QueryDsl;
 use diesel::QueryResult;
@@ -38,8 +36,21 @@ pub fn get_all(conn: db_pool::DbConn) -> QueryResult<Json<Vec<Room>>> {
     rooms.load::<Room>(&*conn).map(Json)
 }
 
-#[post("/", data = "<room>")]
-pub fn create(room: Json<Room>, conn: db_pool::DbConn) -> Result<Json<Room>, Status> {
+#[derive(Serialize, Deserialize, Queryable, Debug, Insertable)]
+#[table_name = "rooms"]
+pub struct NewRoom {
+    pub name: String,
+    pub device_names: Vec<String>,
+}
+
+#[post("/<parent_house_id>", data = "<room>")]
+pub fn create(
+    room: Json<NewRoom>,
+    parent_house_id: i32,
+    conn: db_pool::DbConn,
+) -> Result<Json<Room>, Status> {
+    use super::schema::house_rooms::dsl::*;
+    use super::schema::rooms;
     use super::schema::rooms::dsl::*;
 
     let room = room.0;
@@ -48,16 +59,32 @@ pub fn create(room: Json<Room>, conn: db_pool::DbConn) -> Result<Json<Room>, Sta
         return Err(Status::Conflict);
     }
 
-    let is_room_exist = rooms.find(&room.id).first::<Room>(&*conn);
-    match is_room_exist {
-        Err(NotFound) => Ok(Json(
-            diesel::insert_into(rooms)
+    let rooms_with_same_name = rooms
+        .select(rooms::all_columns)
+        .filter(rooms::name.eq(&room.name))
+        .load::<Room>(&*conn)
+        .expect("Failed to add new room");
+
+    match rooms_with_same_name[..] {
+        [] => {
+            let inserted_room: Room = diesel::insert_into(rooms)
                 .values(&room)
                 .get_result(&*conn)
-                .expect("Failed to add new room"),
-        )),
-        Ok(_) => Err(Status::Conflict),
-        _ => panic!("Failed to add new room"),
+                .expect("Failed to add new room");
+
+            let house_room_link = NewHouseRoom {
+                house_id: parent_house_id,
+                room_id: inserted_room.id,
+            };
+
+            let _link: HouseRooms = diesel::insert_into(house_rooms)
+                .values(&house_room_link)
+                .get_result(&*conn)
+                .expect("Failed to link room with house");
+
+            Ok(Json(inserted_room))
+        }
+        _ => Err(Status::Conflict),
     }
 }
 
@@ -98,12 +125,12 @@ pub fn add_device(
 }
 
 #[delete("/<fid>")]
-pub fn delete(fid: i32, conn: db_pool::DbConn) -> Result<(), Status> {
+pub fn delete(fid: i32, conn: db_pool::DbConn) -> Result<Json<()>, Status> {
     use super::schema::rooms::dsl::*;
 
     diesel::delete(rooms.find(fid))
         .execute(&*conn)
         .expect("Failed to delete room");
 
-    Ok(())
+    Ok(Json(()))
 }

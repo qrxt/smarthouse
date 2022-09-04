@@ -10,3 +10,6 @@ watch:
 
 start:
 	cargo run --example client
+
+generate_data:
+	cargo run --example generate
