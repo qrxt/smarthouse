@@ -1,4 +1,5 @@
 use diesel::RunQueryDsl;
+use dotenv::dotenv;
 use rocket::local::Client;
 use rocket::routes;
 use smart_house_http::db_pool;
@@ -18,21 +19,23 @@ use smart_house_http::schema::devices::dsl::*;
 use smart_house_http::schema::house_rooms::dsl::*;
 use smart_house_http::schema::houses::dsl::*;
 use smart_house_http::schema::rooms::dsl::*;
+use std::env;
 use uuid::Uuid;
 
 #[tokio::test]
 async fn get_report() -> Result<(), Box<dyn std::error::Error>> {
-    let database_url = "postgres://qrx:123@localhost/smart_house"; // TODO! remove! use from .env
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let database_max_size = 10;
-    let _conn = db_pool::init_pool(database_url, database_max_size)
+    let _conn = db_pool::init_pool(&database_url, database_max_size)
         .get()
         .unwrap();
 
-    let conn = db_pool::init_pool(database_url, database_max_size)
+    let conn = db_pool::init_pool(&database_url, database_max_size)
         .get()
         .unwrap();
     let rocket = rocket::ignite()
-        .manage(db_pool::init_pool(database_url, database_max_size))
+        .manage(db_pool::init_pool(&database_url, database_max_size))
         .mount("/houses", routes![house_routes::get_report]);
     let client = Client::new(rocket).expect("valid rocket instance");
 

@@ -13,10 +13,7 @@ use std::env;
 
 fn main() {
     dotenv().ok();
-    dotenv::from_filename("../.env").ok();
-
-    // let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let database_url = "postgres://qrx:123@localhost/smart_house"; // TODO! remove! use from .env
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
 
     let database_max_size = env::var("DATABASE_MAX_SIZE")
         .unwrap_or_else(|_| String::from("10"))

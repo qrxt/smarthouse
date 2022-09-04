@@ -1,4 +1,5 @@
 use diesel::RunQueryDsl;
+use dotenv::dotenv;
 use smart_house_http::db_pool::{self, DbConn};
 use smart_house_http::device::{Device, DeviceItem, NewDevice, Thermometer};
 use smart_house_http::house::{House, HouseRooms, NewHouse, NewHouseRoom};
@@ -7,10 +8,12 @@ use smart_house_http::schema::devices::dsl::*;
 use smart_house_http::schema::house_rooms::dsl::*;
 use smart_house_http::schema::houses::dsl::*;
 use smart_house_http::schema::rooms::dsl::*;
+use std::env;
 
 fn main() -> Result<(), std::io::Error> {
-    let database_url = "postgres://qrx:123@localhost/smart_house"; // TODO! remove! use from .env
-    let connection = db_pool::init_pool(database_url, 10);
+    dotenv().ok();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let connection = db_pool::init_pool(&database_url, 10);
     let dbconn = DbConn(connection.get().unwrap());
 
     // Add new house
