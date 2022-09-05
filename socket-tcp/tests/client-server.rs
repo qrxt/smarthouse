@@ -20,12 +20,10 @@ async fn test_client_server() -> Result<(), ConnectionError> {
     });
 
     async fn run_tests(socket_client: Client) -> Result<(), ConnectionError> {
-        assert_eq!(socket_client.turn_on().await?, "my socket is on");
-        assert_eq!(socket_client.turn_off().await?, "my socket is off");
-        assert_eq!(
-            socket_client.get_power_consumption().await?,
-            "Power consumption is 20"
-        );
+        assert_eq!(socket_client.turn_on().await?, "on");
+        assert_eq!(socket_client.get_power_consumption().await?, "20");
+        assert_eq!(socket_client.turn_off().await?, "off");
+        assert_eq!(socket_client.get_power_consumption().await?, "0");
 
         Ok(())
     }
@@ -39,7 +37,7 @@ async fn test_client_server() -> Result<(), ConnectionError> {
 #[tokio::test]
 async fn test_cant_connect_error() -> Result<(), ConnectionError> {
     let socket_client = Client {
-        address: "127.0.0.1:3333".to_string(),
+        address: "127.0.0.1:3334".to_string(),
     };
 
     let result = socket_client.turn_on().await.unwrap_err().to_string();

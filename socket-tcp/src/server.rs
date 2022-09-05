@@ -35,8 +35,6 @@ async fn handle_connection(mut stream: TcpStream, socket: Arc<Mutex<Socket>>) {
     let mut response = String::new();
     let mut buf_reader = BufReader::new(&mut stream);
 
-    println!("from handle conn");
-
     buf_reader
         .read_line(&mut response)
         .await
@@ -63,6 +61,14 @@ async fn handle_connection(mut stream: TcpStream, socket: Arc<Mutex<Socket>>) {
         Command::GetPowerConsumption => {
             let socket = socket.lock().unwrap();
             socket.get_power_consumption()
+        }
+        Command::GetStatusText => {
+            let socket = socket.lock().unwrap();
+            socket.get_status_text()
+        }
+        Command::GetName => {
+            let socket = socket.lock().unwrap();
+            socket.get_name()
         }
     };
 
