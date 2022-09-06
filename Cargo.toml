@@ -1,7 +1,12 @@
 [workspace]
+resolver = "2"
 
 members = [
     "smart_house",
     "socket-tcp",
     "thermometer-udp"
+]
+
+default-members = [
+    "socket-tcp"
 ]
