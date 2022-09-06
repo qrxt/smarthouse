@@ -34,6 +34,8 @@ async fn get_power_consumption(address: String) -> Result<String, ConnectionErro
     client.get_power_consumption().await
 }
 
+const LOCALHOST_ADDRESS: &str = "127.0.0.1:3333";
+
 pub fn main() -> iced::Result {
     let settings = Settings {
         window: window::Settings {
@@ -63,6 +65,9 @@ struct Model {
     power_consumption: String,
 
     ip_address_button_state: button::State,
+
+    localhost_connection_button_state: button::State,
+
     ip_address_input_state: text_input::State,
     ip_address_input: String,
 }
@@ -93,6 +98,9 @@ impl Application for Model {
                 power_consumption: "0.0".to_string(),
 
                 ip_address_button_state: button::State::default(),
+
+                localhost_connection_button_state: button::State::default(),
+
                 ip_address_input: "".to_string(),
                 ip_address_input_state: text_input::State::default(),
             },
@@ -106,27 +114,21 @@ impl Application for Model {
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         match message {
-            Message::StatusReceived(result) => {
-                println!("status received: {:?}", result);
+            Message::StatusReceived(result) => match result {
+                Ok(status) => {
+                    self.status = matches!(status.as_str(), "on");
+                    self.state = ApplicationState::Connected;
 
-                match result {
-                    Ok(status) => {
-                        self.status = matches!(status.as_str(), "on");
-                        self.state = ApplicationState::Connected;
-
-                        println!("$$$OK");
-
-                        Command::none()
-                    }
-                    Err(e) => {
-                        eprintln!("Failed to get socket status: {}", e);
-                        self.status = false;
-                        self.state = ApplicationState::FailedToConnect;
-
-                        Command::none()
-                    }
+                    Command::none()
                 }
-            }
+                Err(e) => {
+                    eprintln!("Failed to get socket status: {}", e);
+                    self.status = false;
+                    self.state = ApplicationState::FailedToConnect;
+
+                    Command::none()
+                }
+            },
 
             Message::ChangeSocketState(new_state) => Command::batch(vec![
                 Command::perform(
@@ -165,26 +167,26 @@ impl Application for Model {
                 }
             },
             Message::IpAddressChanged(new_input_state) => {
-                println!("Changing text input state: {}", new_input_state);
-
                 self.ip_address_input = new_input_state;
 
                 Command::none()
             }
-            Message::IpAddressSubmit(ip_address) => Command::batch(vec![
-                Command::perform(get_status(ip_address.to_string()), Message::StatusReceived),
-                Command::perform(get_name(ip_address.to_string()), Message::NameReceived),
-                Command::perform(
-                    get_power_consumption(ip_address),
-                    Message::PowerConsumptionReceived,
-                ),
-            ]),
+            Message::IpAddressSubmit(ip_address) => {
+                self.ip_address_input = ip_address.to_string();
+
+                Command::batch(vec![
+                    Command::perform(get_status(ip_address.to_string()), Message::StatusReceived),
+                    Command::perform(get_name(ip_address.to_string()), Message::NameReceived),
+                    Command::perform(
+                        get_power_consumption(ip_address),
+                        Message::PowerConsumptionReceived,
+                    ),
+                ])
+            }
         }
     }
 
     fn view(&mut self) -> Element<'_, Self::Message> {
-        println!("app state: {:?}", &self.state);
-
         match self.state {
             ApplicationState::NotConnected | ApplicationState::FailedToConnect => {
                 let connection_error_text = match self.state {
@@ -213,6 +215,21 @@ impl Application for Model {
                 )
                 .on_submit(Message::IpAddressSubmit(self.ip_address_input.to_string()));
 
+                let localhost_connection_button: Button<Message> = Button::new(
+                    &mut self.localhost_connection_button_state,
+                    Row::new()
+                        .spacing(10)
+                        .align_items(Alignment::Center)
+                        .push(Text::new("Connect to localhost")),
+                )
+                .on_press(Message::IpAddressSubmit(LOCALHOST_ADDRESS.to_string()));
+
+                let localhost_connection_row = Row::new()
+                    .spacing(10)
+                    .align_items(Alignment::Center)
+                    .width(Length::Fill)
+                    .push(localhost_connection_button);
+
                 let inputs_row = Row::new()
                     .spacing(10)
                     .align_items(Alignment::Center)
@@ -224,6 +241,7 @@ impl Application for Model {
                         .padding(10)
                         .push(connection_error_text_component)
                         .push(inputs_row)
+                        .push(localhost_connection_row)
                         .align_items(Alignment::Center),
                 )
                 .width(Length::Fill)
